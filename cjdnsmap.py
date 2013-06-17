@@ -18,26 +18,14 @@
 # - Color nodes depending on the number of connections
 #
 
-######## SETTINGS ###############
-credentialsFromConfig = True    # Whether or not to get cjdns credentials from ~/.cjdnsadmin
-nonames = True                  # Should we even bother trying to look up names?
-cjdadmin_ip   = "127.0.0.1"	    #
-cjdadmin_port = 11234           #
-cjdadmin_pass = "insecure_pass" #
-filename      = 'map.svg'       # Picks format based on filename. If it ends in .svg it's an svg, otherwise it's a png
-#################################
-
 import re
 import socket
 import sys
 import math
 import json
-try:
-    import httplib2
-except:
-    print "Requires httplib2, try: "
-    print "sudo easy_install httplib2"
-    sys.exit()
+import ConfigParser
+import os
+
 try:
     import pydot
 except:
@@ -52,6 +40,34 @@ except:
     print "also comes with cjdns, check contrib/python/ in the cjdns source"
     sys.exit()
 
+config = ConfigParser.ConfigParser()
+filesread = config.read(["cjdns.ini", "cjdnsmap.ini", os.getenv("HOME") + "/.cjdns.ini", os.getenv("HOME") + "/.cjdnsadmin.ini"])
+if len(filesread) == 0:
+    print "No config files found! Tried cjdns.ini, cjdnsmap.ini, " + os.getenv("HOME") + "/.cjdns.ini and " + os.getenv("HOME") + "/.cjdns.ini"
+for conffile in filesread:
+    print "Read from " + conffile
+cjdnsadmin_ip = "127.0.0.1"
+cjdnsadmin_port = 11234
+cjdnsadmin_pass = None
+filename = "map.svg"
+nameip = {}
+
+if config.has_section("cjdns"):
+    if config.has_option("cjdns", "adminIP"):
+        cjdnsadmin_ip = config.get("cjdns", "adminIP")
+    if config.has_option("cjdns", "adminPort"):
+        cjdnsadmin_port = config.get("cjdns", "adminPort")
+    if config.has_option("cjdns", "adminPass"):
+        cjdnsadmin_pass = config.get("cjdns", "adminPass")
+if config.has_section("map"):
+    if config.has_option("map", "filename"):
+        filename = config.get("map", "filename")
+    if config.has_option("map", "names"):
+        try:
+            names = json.load(open(config.get("map", "names")))
+        except Exception as e:
+            print "Failed to load name list:"
+            print e
 
 if len(sys.argv) == 5:
     cjdadmin_ip = sys.argv[1]
@@ -206,60 +222,8 @@ class route:
             return parent
         return None
         
-# retrieve the node names from the page maintained by Mikey
-names = {}
-if not nonames:
-    page = 'http://[fc5d:baa5:61fc:6ffd:9554:67f0:e290:7535]/nodes/list.json'
-    print('Downloading the list of node names from {0} ...'.format(page))
-    h = httplib2.Http(".cache")
-    try:
-        r, content = h.request(page, "GET")
-        nameip = json.loads(content)['nodes']
-    except:
-        print "Connection to Mikey's nodelist failed, continuing without names"
-        nameip = {}
-else:
-    nameip = {}
-
 existing_names = set()
 doubles = set()
-
-for node in nameip:
-    if not node['name'] in doubles:
-        names[node['ip']]=node['name']
-    else:
-        names[node['ip']]=node['name'] + ' ' + ip.split(':')[-1]
-
-"""
-page = 'http://ircerr.bt-chat.com/cjdns/ipv6-cjdnet.data.txt'
-print('Downloading the list of node names from {0} ...'.format(page))
-names = {}
-h = httplib2.Http(".cache")
-r, content = h.request(page, "GET")
-
-existing_names = set()
-doubles = set()
-nameip = []
-for l in content.split('\n'):
-    l = l.strip()
-    if not l or l.startswith('#'):
-        continue
-    d = l.split(' ')
-    if len(d) < 2:
-        continue # use the standard last two bytes
-    ip   = d[0]
-    name = d[1]
-    nameip.append((name,ip))
-    if name in existing_names:
-        doubles.add(name)
-    existing_names.add(name)
-    
-for name,ip in nameip:
-    if not name in doubles:
-        names[ip]=name
-    else:
-        names[ip]=name + ' ' + ip.split(':')[-1]
-"""
 
 routes = [];
 i = 0;
