@@ -19,12 +19,12 @@
 #
 
 ######## SETTINGS ###############
-credentialsFromConfig = True   # Whether or not to get cjdns credentials from ~/.cjdnsadmin
-nonames = False                 # Should we even bother trying to look up names?
+credentialsFromConfig = True    # Whether or not to get cjdns credentials from ~/.cjdnsadmin
+nonames = True                  # Should we even bother trying to look up names?
 cjdadmin_ip   = "127.0.0.1"	    #
 cjdadmin_port = 11234           #
 cjdadmin_pass = "insecure_pass" #
-filename      = 'map.svg'	    # Picks format based on filename. If it ends in .svg it's an svg, otherwise it's a png
+filename      = 'map.svg'       # Picks format based on filename. If it ends in .svg it's an svg, otherwise it's a png
 #################################
 
 import re
@@ -45,7 +45,7 @@ except:
     print "sudo easy_install pydot"
     sys.exit()
 try:
-    from cjdns import cjdns_connect, cjdns_connectWithAdminInfo
+    import cjdnsadmin
 except:
     print "Requires cjdns python module. It should've been included"
     print "with this program. Please ensure that it's in the path. It"
@@ -166,9 +166,9 @@ def hsv_to_color(h,s,v):
 ###################################################
 
 try:
-    cjdns = cjdns_connect(cjdadmin_ip, cjdadmin_port, cjdadmin_pass)
+    cjdns = cjdnsadmin.connect(cjdadmin_ip, cjdadmin_port, cjdadmin_pass)
 except:
-    cjdns = cjdns_connectWithAdminInfo()
+    cjdns = cjdnsadmin.connectWithAdminInfo()
     
 class route:
     def __init__(self, ip, name, path, link):
@@ -207,11 +207,11 @@ class route:
         return None
         
 # retrieve the node names from the page maintained by Mikey
-page = 'http://[fc5d:baa5:61fc:6ffd:9554:67f0:e290:7535]/nodes/list.json'
-print('Downloading the list of node names from {0} ...'.format(page))
 names = {}
-h = httplib2.Http(".cache")
 if not nonames:
+    page = 'http://[fc5d:baa5:61fc:6ffd:9554:67f0:e290:7535]/nodes/list.json'
+    print('Downloading the list of node names from {0} ...'.format(page))
+    h = httplib2.Http(".cache")
     try:
         r, content = h.request(page, "GET")
         nameip = json.loads(content)['nodes']
