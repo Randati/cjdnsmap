@@ -41,9 +41,10 @@ except:
     sys.exit()
 
 config = ConfigParser.ConfigParser()
-filesread = config.read(["cjdns.ini", "cjdnsmap.ini", os.getenv("HOME") + "/.cjdns.ini", os.getenv("HOME") + "/.cjdnsadmin.ini"])
+conffiles = ["cjdnsmap.ini", "map.ini", os.getenv("HOME") + "/.cjdnsmap.ini", os.getenv("HOME") + "/.cjdnsadmin.ini"]
+filesread = config.read()
 if len(filesread) == 0:
-    print "No config files found! Tried cjdns.ini, cjdnsmap.ini, " + os.getenv("HOME") + "/.cjdns.ini and " + os.getenv("HOME") + "/.cjdns.ini"
+    print "No config files found! Tried " conffiles[0:-1].join(", ") + ", and " + conffiles[-1]
 for conffile in filesread:
     print "Read from " + conffile
 cjdnsadmin_ip = "127.0.0.1"
