@@ -42,16 +42,16 @@ except:
 
 config = ConfigParser.ConfigParser()
 conffiles = ["cjdnsmap.ini", "map.ini", os.getenv("HOME") + "/.cjdnsmap.ini", os.getenv("HOME") + "/.cjdnsadmin.ini"]
-filesread = config.read()
+filesread = config.read(conffiles)
 if len(filesread) == 0:
-    print "No config files found! Tried " conffiles[0:-1].join(", ") + ", and " + conffiles[-1]
+    print "No config files found! Tried " + ", ".join(conffiles[0:-1]) + ", and " + conffiles[-1]
 for conffile in filesread:
     print "Read from " + conffile
 cjdnsadmin_ip = "127.0.0.1"
 cjdnsadmin_port = 11234
 cjdnsadmin_pass = None
 filename = "map.svg"
-nameip = {}
+names = {}
 
 if config.has_section("cjdns"):
     if config.has_option("cjdns", "adminIP"):
